@@ -1,0 +1,50 @@
+/**
+ * Cloudflare Wrangler Configuration
+ * AI Gateway Project
+ * https://developers.cloudflare.com/workers/wrangler/configuration/
+ */
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+
+	"name": "ai-gateway",
+	"main": "src/index.ts",
+	"compatibility_date": "2026-07-06",
+
+	"observability": {
+		"enabled": true
+	},
+
+	"upload_source_maps": true,
+
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+
+	"ai": {
+		"binding": "AI"
+	}
+
+	/**
+	 * Optional configurations
+	 */
+
+	// "placement": {
+	//   "mode": "smart"
+	// },
+
+	// "vars": {
+	//   "ENVIRONMENT": "development"
+	// },
+
+	// "assets": {
+	//   "directory": "./public",
+	//   "binding": "ASSETS"
+	// },
+
+	// "services": [
+	//   {
+	//     "binding": "MY_SERVICE",
+	//     "service": "my-service"
+	//   }
+	// ]
+}
