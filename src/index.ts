@@ -1,3 +1,4 @@
+import { healthRoute } from "./routes/health";
 import { createWorkersAiChat } from "@cloudflare/tanstack-ai";
 import { chat, toHttpResponse } from "@tanstack/ai";
 
@@ -18,17 +19,20 @@ export default {
       }
 
       if (url.pathname === "/health") {
-        return Response.json({
-          status: "healthy",
-          ai: "connected"
-        });
-      }
+  return healthRoute();
+}
 
-      if (request.method !== "POST") {
-        return new Response("Use POST /chat", {
-          status: 405,
-        });
-      }
+      if (url.pathname !== "/chat") {
+    return new Response("Not Found", {
+        status: 404,
+    });
+}
+
+if (request.method !== "POST") {
+    return new Response("Use POST /chat", {
+        status: 405,
+    });
+}
 
       const body = await request.json() as {
         messages: {
