@@ -1,74 +1,98 @@
+import { loggerMiddleware } from "./middleware/logger";
+import { authMiddleware } from "./middleware/auth";
+import { chatRoute } from "./routes/chat";
+import { completionsRoute } from "./routes/completions";
 import { healthRoute } from "./routes/health";
-import { createWorkersAiChat } from "@cloudflare/tanstack-ai";
-import { chat, toHttpResponse } from "@tanstack/ai";
+import { modelsRoute } from "./routes/models";
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
+
+  return loggerMiddleware(
+    request,
+    async () => {
     try {
-      // Health endpoint
+
+      // API Key Authentication
+      const authError = authMiddleware(request);
+
+      if (authError) {
+        return authError;
+      }
+
       const url = new URL(request.url);
 
+      // Root endpoint
       if (url.pathname === "/") {
         return Response.json({
           success: true,
           name: "AI Gateway",
           version: "1.0.0",
+          status: "running",
           model: "@cf/zai-org/glm-5.2",
-          status: "running"
         });
       }
 
+      // Health endpoint
       if (url.pathname === "/health") {
-  return healthRoute();
-}
+        return healthRoute();
+      }
 
-      if (url.pathname !== "/chat") {
-    return new Response("Not Found", {
-        status: 404,
-    });
-}
+      // OpenAI-compatible Models endpoint
+      if (url.pathname === "/v1/models") {
+        return modelsRoute();
+      }
 
-if (request.method !== "POST") {
-    return new Response("Use POST /chat", {
-        status: 405,
-    });
-}
+      // OpenAI-compatible Chat Completions
+      if (url.pathname === "/v1/chat/completions") {
 
-      const body = await request.json() as {
-        messages: {
-          role: "system" | "user" | "assistant";
-          content: string;
-        }[];
-      };
-
-      const adapter = createWorkersAiChat(
-        "@cf/zai-org/glm-5.2",
-        {
-          binding: env.AI,
+        if (request.method !== "POST") {
+          return new Response("Method Not Allowed", {
+            status: 405,
+          });
         }
-      );
 
-      const response = await chat({
-        adapter,
-        stream: true,
-        messages: body.messages,
-        modelOptions: {
-          reasoning_effort: "high",
-        },
+        return await completionsRoute(request, env);
+      }
+
+
+      // Chat endpoint
+      if (url.pathname === "/chat") {
+
+        if (request.method !== "POST") {
+          return new Response("Method Not Allowed", {
+            status: 405,
+          });
+        }
+
+        return await chatRoute(request, env);
+      }
+
+
+      // Unknown route
+      return new Response("Not Found", {
+        status: 404,
       });
 
-      return toHttpResponse(response);
 
     } catch (error) {
+
+      console.error(error);
+
       return Response.json(
         {
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error:
+            error instanceof Error
+              ? error.message
+              : "Unknown error",
         },
         {
           status: 500,
         }
       );
     }
-  },
+     }
+  );
+}
 } satisfies ExportedHandler<Env>;

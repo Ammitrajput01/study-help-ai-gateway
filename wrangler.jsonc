@@ -21,12 +21,12 @@
 	],
 
 	"ai": {
-		"binding": "AI"
-	}
+	"binding": "AI"
+},
 
-	/**
-	 * Optional configurations
-	 */
+/**
+ * Optional configurations
+ */
 
 	// "placement": {
 	//   "mode": "smart"
